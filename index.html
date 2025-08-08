@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>📒 Registrar Movimientos Biwenger</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+        td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+        textarea { width: 100%; height: 120px; }
+        input[type="number"] { width: 50px; }
+        .error { color: red; margin-top: 10px; }
+        .success { color: green; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>📒 Registrar Movimientos Biwenger</h2>
+
+    <label for="jornada">Jornada:</label>
+    <input type="number" id="jornada" value="1" min="1"><br><br>
+
+    <label for="movimientos">Pega los movimientos (una línea por movimiento):</label><br>
+    <textarea id="movimientos"></textarea><br>
+    <button onclick="procesarMovimientos()">Procesar movimientos</button>
+
+    <table id="tablaMovimientos">
+        <thead>
+            <tr>
+                <th>Jornada</th><th>Fecha</th><th>Equipo</th><th>Tipo</th><th>Jugador</th><th>Precio (€)</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button onclick="enviarMovimientos()">Enviar movimientos</button>
+    <div id="resultado" class="error"></div>
+
+<script>
+const url = "https://script.google.com/macros/s/AKfycbzz3ROen0yW-hXk0a7Fn-lfKLEXmzKN0BCjPQoewkLTg5GBXloQsdOeM5ep5JGkaru7/exec";
+
+function procesarMovimientos() {
+    const jornada = document.getElementById("jornada").value;
+    const hoy = new Date().toLocaleDateString("es-ES");
+    const texto = document.getElementById("movimientos").value;
+    const lineas = texto.trim().split("\n");
+
+    const tbody = document.querySelector("#tablaMovimientos tbody");
+    tbody.innerHTML = "";
+
+    for (let linea of lineas) {
+        linea = linea.replace(/\u00A0/g, " ").trim();
+
+        const regex = /^(.*?):\s*(Vendido por (.*?) a .*? por|Cambia por)\s*([\d\.]+(?:,\d+)?)\s*€\s*(?:a\s*(.*))?/i;
+        const match = linea.match(regex);
+
+        if (match) {
+            const jugador = match[1];
+            const tipo = match[2].toLowerCase().includes("vendido") ? "Venta" : "Fichaje";
+            const precio = parseFloat(match[4].replace(/\./g, "").replace(",", "."));
+            const equipo = tipo === "Venta" ? match[3] : match[5] || "";
+
+            const fila = `<tr>
+                <td>${jornada}</td>
+                <td>${hoy}</td>
+                <td>${equipo}</td>
+                <td>${tipo}</td>
+                <td>${jugador}</td>
+                <td>${precio}</td>
+            </tr>`;
+            tbody.innerHTML += fila;
+        }
+    }
+}
+
+function enviarMovimientos() {
+    const filas = document.querySelectorAll("#tablaMovimientos tbody tr");
+    const resultado = document.getElementById("resultado");
+    resultado.className = "error";
+    resultado.innerText = "";
+
+    if (filas.length === 0) {
+        resultado.innerText = "No hay movimientos para enviar.";
+        return;
+    }
+
+    let enviados = 0;
+
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll("td");
+        const data = {
+            jornada: celdas[0].innerText,
+            fecha: celdas[1].innerText,
+            equipo: celdas[2].innerText,
+            tipo: celdas[3].innerText,
+            jugadorFichado: celdas[4].innerText,
+            precio: celdas[5].innerText
+        };
+
+        fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        }).then(() => {
+            enviados++;
+            if (enviados === filas.length) {
+                resultado.className = "success";
+                resultado.innerText = `${enviados} movimiento(s) enviados correctamente.`;
+            }
+        }).catch(error => {
+            resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
+            console.error(error);
+        });
+    });
+}
+</script>
+</body>
+</html>
