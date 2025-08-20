@@ -41,7 +41,7 @@
   <div id="resultado" class="error"></div>
 
 <script>
-const url = "https://script.google.com/macros/s/AKfycbz6Vl04-E-n7VtUVXVkiIAf1-ox4JlEkkrl1D1ylEfd_IHKl5tskXafUdgz1NzD2fML/exec";
+const url = "https://script.google.com/macros/s/AKfycbz6Vl04-E-n7VtUVXVkiIAf1-ox4JlEkkrl1D1ylEfd_IHKl5tskXafUdgz1NzD2fML/exec"; // 👈 CAMBIA ESTA URL si generas una nueva
 
 function procesarMovimientos() {
   const jornada = document.getElementById("jornada").value;
@@ -76,7 +76,6 @@ function procesarMovimientos() {
     }
   }
 
-  // Vaciar textarea tras procesar
   document.getElementById("movimientos").value = "";
 }
 
@@ -102,7 +101,6 @@ function añadirPremio() {
 
   document.querySelector("#tablaMovimientos tbody").innerHTML += fila;
 
-  // Vaciar campos
   document.getElementById("jugadorPremio").value = "";
   document.getElementById("premio").value = "";
 }
@@ -133,21 +131,22 @@ function enviarMovimientos() {
   });
 
   fetch(url, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ movimientos: movimientos })
-})
-.then(response => response.text())
-.then(data => {
-  resultado.className = "success";
-  resultado.innerText = `${movimientos.length} movimiento(s) enviados correctamente.`;
-  document.querySelector("#tablaMovimientos tbody").innerHTML = "";
-  console.log("Respuesta:", data);
-})
-.catch(error => {
-  resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
-  console.error(error);
-});
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ movimientos: movimientos })
+  })
+  .then(res => res.text())
+  .then(texto => {
+    resultado.className = "success";
+    resultado.innerText = texto;
+    document.querySelector("#tablaMovimientos tbody").innerHTML = "";
+  })
+  .catch(error => {
+    resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
+    console.error("Error:", error);
+  });
 }
 </script>
 </body>
