@@ -133,21 +133,20 @@ function enviarMovimientos() {
   });
 
   fetch(url, {
-    method: "POST",
-    mode: "no-cors", // 🔴 temporal para evitar error 405
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ movimientos: movimientos })
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ movimientos: movimientos })
 })
-.then(() => {
-    resultado.className = "success";
-    resultado.innerText = `${movimientos.length} movimiento(s) enviados correctamente.`;
-    document.querySelector("#tablaMovimientos tbody").innerHTML = "";
+.then(response => response.text())
+.then(data => {
+  resultado.className = "success";
+  resultado.innerText = `${movimientos.length} movimiento(s) enviados correctamente.`;
+  document.querySelector("#tablaMovimientos tbody").innerHTML = "";
+  console.log("Respuesta:", data);
 })
 .catch(error => {
-    resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
-    console.error(error);
+  resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
+  console.error(error);
 });
 }
 </script>
