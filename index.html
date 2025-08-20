@@ -134,20 +134,21 @@ function enviarMovimientos() {
 
   fetch(url, {
     method: "POST",
-    mode: "cors", // <--- NECESARIO para evitar error CORS
-    headers: { "Content-Type": "application/json" },
+    mode: "no-cors", // 🔴 temporal para evitar error 405
+    headers: {
+        "Content-Type": "application/json"
+    },
     body: JSON.stringify({ movimientos: movimientos })
-  })
-  .then(response => response.text())
-  .then(data => {
+})
+.then(() => {
     resultado.className = "success";
     resultado.innerText = `${movimientos.length} movimiento(s) enviados correctamente.`;
     document.querySelector("#tablaMovimientos tbody").innerHTML = "";
-  })
-  .catch(error => {
+})
+.catch(error => {
     resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
     console.error(error);
-  });
+});
 }
 </script>
 </body>
