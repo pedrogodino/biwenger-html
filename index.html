@@ -8,7 +8,7 @@
         table { border-collapse: collapse; margin-top: 20px; width: 100%; }
         td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
         textarea { width: 100%; height: 120px; }
-        input[type="number"] { width: 50px; }
+        input[type="number"], input[type="text"] { width: 150px; margin-right: 10px; }
         .error { color: red; margin-top: 10px; }
         .success { color: green; margin-top: 10px; }
     </style>
@@ -22,6 +22,11 @@
     <label for="movimientos">Pega los movimientos (una línea por movimiento):</label><br>
     <textarea id="movimientos"></textarea><br>
     <button onclick="procesarMovimientos()">Procesar movimientos</button>
+
+    <h3>🎁 Añadir premio como ingreso</h3>
+    <input type="text" id="jugadorPremio" placeholder="Nombre del jugador">
+    <input type="number" id="premio" placeholder="Importe (€)">
+    <button onclick="añadirPremio()">Añadir premio</button>
 
     <table id="tablaMovimientos">
         <thead>
@@ -70,6 +75,36 @@ function procesarMovimientos() {
             tbody.innerHTML += fila;
         }
     }
+
+    // Vaciar textarea tras procesar
+    document.getElementById("movimientos").value = "";
+}
+
+function añadirPremio() {
+    const jugador = document.getElementById("jugadorPremio").value.trim();
+    const premio = parseFloat(document.getElementById("premio").value);
+    const jornada = document.getElementById("jornada").value;
+    const hoy = new Date().toLocaleDateString("es-ES");
+
+    if (!jugador || isNaN(premio)) {
+        alert("Introduce el nombre del jugador y el importe del premio.");
+        return;
+    }
+
+    const fila = `<tr>
+        <td>${jornada}</td>
+        <td>${hoy}</td>
+        <td></td>
+        <td>Premio</td>
+        <td>${jugador}</td>
+        <td>${premio}</td>
+    </tr>`;
+
+    document.querySelector("#tablaMovimientos tbody").innerHTML += fila;
+
+    // Vaciar campos
+    document.getElementById("jugadorPremio").value = "";
+    document.getElementById("premio").value = "";
 }
 
 function enviarMovimientos() {
@@ -83,34 +118,34 @@ function enviarMovimientos() {
         return;
     }
 
-    let enviados = 0;
+    const movimientos = [];
 
     filas.forEach(fila => {
         const celdas = fila.querySelectorAll("td");
-        const data = {
+        movimientos.push({
             jornada: celdas[0].innerText,
             fecha: celdas[1].innerText,
             equipo: celdas[2].innerText,
             tipo: celdas[3].innerText,
             jugadorFichado: celdas[4].innerText,
             precio: celdas[5].innerText
-        };
-
-        fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        }).then(() => {
-            enviados++;
-            if (enviados === filas.length) {
-                resultado.className = "success";
-                resultado.innerText = `${enviados} movimiento(s) enviados correctamente.`;
-            }
-        }).catch(error => {
-            resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
-            console.error(error);
         });
+    });
+
+    fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ movimientos: movimientos })
+    }).then(() => {
+        resultado.className = "success";
+        resultado.innerText = `${movimientos.length} movimiento(s) enviados correctamente.`;
+
+        // Vaciar tabla
+        document.querySelector("#tablaMovimientos tbody").innerHTML = "";
+    }).catch(error => {
+        resultado.innerText = "Error al enviar los movimientos. Revisa la consola.";
+        console.error(error);
     });
 }
 </script>
